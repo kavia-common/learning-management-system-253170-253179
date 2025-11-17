@@ -14,7 +14,20 @@ import CreateQuiz from './pages/CreateQuiz';
 import AssignCourses from './pages/AssignCourses';
 import ProtectedRoute from './routes/ProtectedRoute';
 import RoleRoute from './routes/RoleRoute';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+
+// Banner component to show missing env guidance
+function SupabaseEnvBanner() {
+  const { supabaseReady } = useAuth();
+  if (supabaseReady) return null;
+  return (
+    <div className="w-full bg-yellow-50 border-b border-yellow-200">
+      <div className="mx-auto max-w-7xl px-4 py-2 text-sm text-yellow-900">
+        Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env (see .env.example). The app UI loads, but authentication and data features are disabled.
+      </div>
+    </div>
+  );
+}
 
 // PUBLIC_INTERFACE
 export default function App() {
@@ -22,6 +35,7 @@ export default function App() {
   return (
     <AuthProvider>
       <div className="flex min-h-screen flex-col bg-gray-50 text-gray-900">
+        <SupabaseEnvBanner />
         <Navbar />
         <div className="mx-auto flex w-full max-w-7xl grow gap-6 px-4 py-6">
           <Sidebar />
@@ -33,7 +47,7 @@ export default function App() {
                   <div className="rounded-xl border border-gray-200 bg-white p-6">
                     <div className="text-xl font-semibold text-gray-900">Welcome to Ocean LMS</div>
                     <p className="mt-1 text-sm text-gray-600">
-                      Backend features are currently disabled. You can browse the UI and static pages.
+                      Explore courses and features. Configure Supabase to enable authentication and data persistence.
                     </p>
                     <p className="mt-2 text-sm text-gray-600">
                       Visit <Link to="/__health" className="text-blue-700 underline">/__health</Link> for a quick check.

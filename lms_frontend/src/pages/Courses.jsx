@@ -4,18 +4,27 @@ import { getSupabaseClient } from '../supabase/client';
 
 // PUBLIC_INTERFACE
 export default function Courses() {
-  /** Lists available courses (mocked in demo mode) */
-  getSupabaseClient(); // ensure stub init for consistency
+  /** Lists available courses (fetch from Supabase when configured) */
+  const supabase = getSupabaseClient();
   const [courses, setCourses] = useState([]);
 
   useEffect(() => {
-    // Mocked dataset
-    const mock = [
-      { id: 'c1', title: 'Ocean LMS 101', description: 'A starter course to explore the LMS.', level: 'Beginner', content_count: 2 },
-      { id: 'c2', title: 'Advanced Topics', description: 'Dive deeper into LMS features.', level: 'Advanced', content_count: 0 },
-    ];
-    setCourses(mock);
-  }, []);
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('courses')
+          .select('id, title, description, level, content_count')
+          .order('created_at', { ascending: false });
+        if (!error && Array.isArray(data)) {
+          setCourses(data);
+        } else {
+          setCourses([]);
+        }
+      } catch {
+        setCourses([]);
+      }
+    })();
+  }, [supabase]);
 
   return (
     <div>
@@ -24,6 +33,11 @@ export default function Courses() {
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {courses.map((c) => <CourseCard key={c.id} course={c} />)}
+        {courses.length === 0 && (
+          <div className="text-sm text-gray-600">
+            No courses found or Supabase not configured.
+          </div>
+        )}
       </div>
     </div>
   );

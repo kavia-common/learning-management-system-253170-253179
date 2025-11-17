@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 // PUBLIC_INTERFACE
 export default function Sidebar() {
   /** Sidebar navigation for the main app layout */
-  const { profile } = useAuth();
+  const { profile, supabaseReady } = useAuth();
   const isAdminLike = ['admin', 'trainer'].includes(profile?.role);
 
   const linkCls = ({ isActive }) =>
@@ -32,9 +32,9 @@ export default function Sidebar() {
           </>
         )}
       </nav>
-      {!isAdminLike && (
+      {!supabaseReady && (
         <div className="mt-4 rounded-md border border-yellow-200 bg-yellow-50 p-2 text-xs text-yellow-800">
-          Admin features hidden. Auth is disabled in this demo.
+          Supabase features are disabled until configured.
         </div>
       )}
     </aside>

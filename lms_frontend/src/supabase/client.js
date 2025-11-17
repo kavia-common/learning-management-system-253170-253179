@@ -1,134 +1,81 @@
 /**
  * PUBLIC_INTERFACE
  * getSupabaseClient
- * Returns a harmless no-op client that mimics the Supabase API used in the app.
- * No environment variables are referenced and no network calls are made.
+ * Initialize and return a real Supabase client using Vite env vars.
  */
+import { createClient } from '@supabase/supabase-js';
+
 let supabaseInstance = null;
 
-// PUBLIC_INTERFACE
+/**
+ * Return whether required env vars exist at runtime (Vite injects import.meta.env).
+ */
+function hasSupabaseEnv() {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const anon = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  return Boolean(url && anon);
+}
+
+/**
+ * PUBLIC_INTERFACE
+ * getSupabaseClient
+ * Returns a singleton Supabase client if env vars are present; otherwise a minimal disabled stub.
+ */
 export function getSupabaseClient() {
-  /** Returns a singleton no-op Supabase-like client. */
   if (supabaseInstance) return supabaseInstance;
 
-  // Minimal in-memory mock store for demo
-  const memory = {
-    users: [],
-    courses: [],
-    course_content: [],
-    enrollments: [],
-    quizzes: [],
-    quiz_questions: [],
-    quiz_submissions: [],
-  };
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-  // Helper to chain a simple "query builder" with limited select/eq/single/order
-  const table = (name) => ({
-    select: () => ({
-      _filters: {},
-      _single: false,
-      _order: null,
-      eq(field, value) {
-        this._filters[field] = value;
-        return this;
+  if (supabaseUrl && supabaseAnonKey) {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
       },
-      single() {
-        this._single = true;
-        return this;
-      },
-      order(field, { ascending } = { ascending: true }) {
-        this._order = { field, ascending };
-        return this;
-      },
-      async then(resolve) {
-        let items = Array.isArray(memory[name]) ? [...memory[name]] : [];
-        // apply filters (equality only)
-        for (const [k, v] of Object.entries(this._filters || {})) {
-          if (name === 'enrollments' && k === 'user_id' && this._select?.includes('course:course_id')) {
-            // very limited shape handling used in Dashboard.jsx: map to { course: { id,title,description } }
-          }
-          items = items.filter((row) => row?.[k] === v);
-        }
-        // ordering
-        if (this._order) {
-          const { field, ascending } = this._order;
-          items.sort((a, b) => {
-            const av = a?.[field];
-            const bv = b?.[field];
-            return (av > bv ? 1 : av < bv ? -1 : 0) * (ascending ? 1 : -1);
-          });
-        }
-        // return shape similar to supabase-js
-        const data = this._single ? items[0] ?? null : items;
-        resolve({ data, error: null });
-      },
-      catch() { /* no-op for promise compat */ },
-    }),
-    insert: (payload) => ({
-      async select() {
-        // pretend insert succeeds and returns object with a generated id
-        const now = Date.now().toString(36);
-        const rows = Array.isArray(payload) ? payload : [payload];
-        const withIds = rows.map((r) => ({ id: r.id || now + Math.random().toString(36).slice(2), ...r }));
-        memory[name].push(...withIds);
-        return { data: withIds, error: null };
-      },
-      async single() {
-        const now = Date.now().toString(36);
-        const row = { id: payload.id || now + Math.random().toString(36).slice(2), ...payload };
-        memory[name].push(row);
-        return { data: row, error: null };
-      },
-      async then(resolve) {
-        memory[name].push(Array.isArray(payload) ? payload[0] : payload);
-        resolve({ data: null, error: null });
-      },
-    }),
-    update: () => ({
-      eq() {
-        return { then(resolve){ resolve({ data: null, error: null }); } };
-      },
-    }),
-  });
+    });
+    return supabaseInstance;
+  }
 
+  // Graceful disabled stub (no network, but API shape to avoid crashes)
+  const disabledError = { message: 'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
   supabaseInstance = {
-    from: (name) => table(name),
-    auth: {
-      async getSession() {
-        // Not authenticated in no-op mode
-        return { data: { session: null }, error: null };
-      },
-      onAuthStateChange() {
-        // Return unsubscribe handle
-        return { data: { subscription: { unsubscribe() {} } } };
-      },
-      async signInWithPassword() {
-        // Always fail (auth disabled)
-        return { data: null, error: { message: 'Authentication disabled in demo mode' } };
-      },
-      async signUp() {
-        // Always succeed superficially, but no real account is created
-        return { data: { user: { id: 'demo-user', email: 'demo@example.com' } }, error: null };
-      },
-      async signOut() {
-        return { error: null };
-      },
+    from() {
+      return {
+        select: () => ({ then: (resolve) => resolve({ data: [], error: disabledError }) }),
+        insert: () => ({ then: (resolve) => resolve({ data: null, error: disabledError }), select: async () => ({ data: null, error: disabledError }), single: async () => ({ data: null, error: disabledError }) }),
+        update: () => ({ then: (resolve) => resolve({ data: null, error: disabledError }), eq: () => ({ then: (resolve) => resolve({ data: null, error: disabledError }) }) }),
+        eq: () => ({ then: (resolve) => resolve({ data: [], error: disabledError }), single: async () => ({ data: null, error: disabledError }), order: () => ({ then: (resolve) => resolve({ data: [], error: disabledError }) }) }),
+        single: async () => ({ data: null, error: disabledError }),
+        order: () => ({ then: (resolve) => resolve({ data: [], error: disabledError }) }),
+      };
     },
     storage: {
       from() {
         return {
-          async createSignedUrl() {
-            // No storage in demo; return empty url
-            return { data: { signedUrl: '' }, error: null };
-          },
-          async upload() {
-            // Pretend success
-            return { data: { path: 'noop' }, error: null };
-          },
+          createSignedUrl: async () => ({ data: { signedUrl: '' }, error: disabledError }),
+          upload: async () => ({ data: null, error: disabledError }),
         };
       },
     },
+    auth: {
+      getSession: async () => ({ data: { session: null }, error: disabledError }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+      signInWithPassword: async () => ({ data: null, error: disabledError }),
+      signUp: async () => ({ data: null, error: disabledError }),
+      signOut: async () => ({ error: null }),
+    },
+    __disabled: true,
   };
-
   return supabaseInstance;
+}
+
+/**
+ * PUBLIC_INTERFACE
+ * isSupabaseConfigured
+ * Returns boolean indicating whether the client is fully configured.
+ */
+export function isSupabaseConfigured() {
+  return hasSupabaseEnv();
 }

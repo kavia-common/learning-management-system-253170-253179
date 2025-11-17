@@ -6,40 +6,58 @@ import { getSupabaseClient } from '../supabase/client';
 
 // PUBLIC_INTERFACE
 export default function CourseDetails() {
-  /** Displays course details and content list with playable/viewable media (mocked) */
+  /** Displays course details and content list with media. Uses Supabase if configured. */
   const { id } = useParams();
-  getSupabaseClient(); // ensure stub init
+  const supabase = getSupabaseClient();
   const [course, setCourse] = useState(null);
   const [contents, setContents] = useState([]);
   const [active, setActive] = useState(null);
   const [signedUrl, setSignedUrl] = useState('');
+  const [storageMsg, setStorageMsg] = useState('');
 
   useEffect(() => {
-    // Mock course and content
-    const mockCourse = { id, title: 'Ocean LMS 101', description: 'A starter course to explore the LMS.' };
-    const mockContents = [
-      { id: 'ct1', course_id: id, title: 'Welcome Video', type: 'video' },
-      { id: 'ct2', course_id: id, title: 'Introduction PDF', type: 'pdf' },
-    ];
-    setCourse(mockCourse);
-    setContents(mockContents);
-    setActive(mockContents[0] || null);
-  }, [id]);
+    (async () => {
+      try {
+        const { data: c } = await supabase.from('courses').select('*').eq('id', id).single();
+        setCourse(c || null);
+        const { data: ct } = await supabase
+          .from('course_content')
+          .select('id, title, type, bucket, storage_path, position')
+          .eq('course_id', id)
+          .order('position', { ascending: true });
+        const list = Array.isArray(ct) ? ct : [];
+        setContents(list);
+        setActive(list[0] || null);
+      } catch {
+        setCourse(null);
+        setContents([]);
+        setActive(null);
+      }
+    })();
+  }, [id, supabase]);
 
   useEffect(() => {
-    // No storage; use empty strings or example public URLs if needed
-    if (!active) {
-      setSignedUrl('');
-      return;
-    }
-    if (active.type === 'video') {
-      setSignedUrl(''); // could place a public demo URL if available
-    } else if (active.type === 'pdf') {
-      setSignedUrl('');
-    } else {
-      setSignedUrl('');
-    }
-  }, [active]);
+    (async () => {
+      setStorageMsg('');
+      if (!active) { setSignedUrl(''); return; }
+      try {
+        // Try to create a signed URL if possible; otherwise keep blank and message
+        const { data, error } = await supabase
+          .storage
+          .from(active.bucket || 'course-media')
+          .createSignedUrl(active.storage_path || '', 60 * 5);
+        if (!error && data?.signedUrl) {
+          setSignedUrl(data.signedUrl);
+        } else {
+          setSignedUrl('');
+          setStorageMsg('Content URL not available (check storage settings).');
+        }
+      } catch {
+        setSignedUrl('');
+        setStorageMsg('Content preview unavailable.');
+      }
+    })();
+  }, [active, supabase]);
 
   return (
     <div className="grid gap-6 md:grid-cols-[1fr_320px]">
@@ -52,9 +70,7 @@ export default function CourseDetails() {
           {active?.type === 'video' ? <VideoPlayer url={signedUrl} /> : null}
           {active?.type === 'pdf' ? <PdfViewer url={signedUrl} /> : null}
           {!active && <div className="text-sm text-gray-600">No content available.</div>}
-          {(active?.type === 'video' || active?.type === 'pdf') && (
-            <div className="text-xs text-gray-500">Content preview disabled in demo mode.</div>
-          )}
+          {storageMsg && <div className="text-xs text-gray-500">{storageMsg}</div>}
         </div>
       </div>
       <div className="space-y-3">
@@ -73,6 +89,7 @@ export default function CourseDetails() {
                 </button>
               </li>
             ))}
+            {contents.length === 0 && <li className="text-sm text-gray-600">No content found.</li>}
           </ul>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-3">

@@ -5,23 +5,47 @@ import { getSupabaseClient } from '../supabase/client';
 
 // PUBLIC_INTERFACE
 export default function Dashboard() {
-  /** Dashboard showing progress and enrollments (mocked) */
+  /** Dashboard showing progress and enrollments */
   const { user } = useAuth();
-  getSupabaseClient(); // init stub
+  const supabase = getSupabaseClient();
   const [courses, setCourses] = useState([]);
   const [progress, setProgress] = useState([]);
 
   useEffect(() => {
-    // Mock chart data regardless of auth state
-    const chart = [
+    // Simple chart data placeholder
+    setProgress([
       { label: 'S1', percent: 40 },
       { label: 'S2', percent: 55 },
       { label: 'S3', percent: 72 },
-    ];
-    setProgress(chart);
-    // No enrollments in demo
-    setCourses([]);
-  }, [user]);
+    ]);
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!user?.id) {
+          setCourses([]);
+          return;
+        }
+        // load enrollments -> join courses
+        const { data: enrolls, error } = await supabase
+          .from('enrollments')
+          .select('course_id');
+        if (error || !Array.isArray(enrolls) || enrolls.length === 0) {
+          setCourses([]);
+          return;
+        }
+        const ids = enrolls.map((e) => e.course_id);
+        const { data: crs } = await supabase
+          .from('courses')
+          .select('id, title, description')
+          .in('id', ids);
+        setCourses(Array.isArray(crs) ? crs : []);
+      } catch {
+        setCourses([]);
+      }
+    })();
+  }, [user, supabase]);
 
   return (
     <div className="space-y-6">
@@ -39,7 +63,7 @@ export default function Dashboard() {
               <div className="text-sm text-gray-600">{c.description}</div>
             </li>
           ))}
-          {courses?.length === 0 && <div className="text-sm text-gray-600">No enrollments yet (demo mode).</div>}
+          {courses?.length === 0 && <div className="text-sm text-gray-600">No enrollments to show.</div>}
         </ul>
       </div>
     </div>
