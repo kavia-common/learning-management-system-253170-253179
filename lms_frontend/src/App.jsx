@@ -12,6 +12,7 @@ import AdminPanel from './pages/AdminPanel';
 import CreateCourse from './pages/CreateCourse';
 import CreateQuiz from './pages/CreateQuiz';
 import AssignCourses from './pages/AssignCourses';
+import SupabaseHelp from './pages/SupabaseHelp';
 import ProtectedRoute from './routes/ProtectedRoute';
 import RoleRoute from './routes/RoleRoute';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -23,7 +24,8 @@ function SupabaseEnvBanner() {
   return (
     <div className="w-full bg-yellow-50 border-b border-yellow-200">
       <div className="mx-auto max-w-7xl px-4 py-2 text-sm text-yellow-900">
-        Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env (see .env.example). The app UI loads, but authentication and data features are disabled.
+        Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env (see .env.example).
+        The app UI loads, but authentication and data features are disabled. See <Link to="/__supabase-help" className="underline">Supabase Help</Link>.
       </div>
     </div>
   );
@@ -51,10 +53,12 @@ export default function App() {
                     </p>
                     <p className="mt-2 text-sm text-gray-600">
                       Visit <Link to="/__health" className="text-blue-700 underline">/__health</Link> for a quick check.
+                      For setup guidance, see <Link to="/__supabase-help" className="text-blue-700 underline">Supabase Help</Link>.
                     </p>
                   </div>
                 }
               />
+              <Route path="/__supabase-help" element={<SupabaseHelp />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
 
