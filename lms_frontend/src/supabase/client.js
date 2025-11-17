@@ -26,11 +26,20 @@ export function getSupabaseClient() {
     process.env.REACT_APP_SUPABASE_KEY;
 
   if (!url || !anonKey) {
-    if (import.meta?.env?.MODE !== 'production' && process.env.NODE_ENV !== 'production') {
+    const isProd = (import.meta?.env?.MODE === 'production') || (process.env.NODE_ENV === 'production');
+    if (!isProd) {
       // eslint-disable-next-line no-console
       console.warn(
         'Supabase env vars missing. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
       );
+      // eslint-disable-next-line no-console
+      console.info('Env presence debug (no secrets):', {
+        hasViteUrl: Boolean(import.meta?.env?.VITE_SUPABASE_URL),
+        hasViteKey: Boolean(import.meta?.env?.VITE_SUPABASE_ANON_KEY),
+        hasCRAUrl: Boolean(process.env?.REACT_APP_SUPABASE_URL),
+        hasCRAKey: Boolean(process.env?.REACT_APP_SUPABASE_KEY || process.env?.REACT_APP_SUPABASE_ANON_KEY),
+        mode: import.meta?.env?.MODE || process.env.NODE_ENV,
+      });
     }
   }
 

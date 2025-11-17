@@ -16,8 +16,8 @@
     "dev": "vite",
     "start": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "postinstall": "node -e \"console.log('Using Vite. If styles missing, ensure Tailwind is installed and content globs include ./index.html and ./src/**/*.')\""
+    "preview": "vite preview --port 3000 --host",
+    "postinstall": "node -e \"console.log('Using Vite on port 3000. If styles missing, ensure Tailwind content globs include ./index.html and ./src/**/*.{js,jsx,ts,tsx}.')\""
   },
   "browserslist": {
     "production": [
