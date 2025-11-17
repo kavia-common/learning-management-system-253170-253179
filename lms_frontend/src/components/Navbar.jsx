@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext';
 
 // PUBLIC_INTERFACE
 export default function Navbar() {
-  /** Top navigation bar with branding and auth actions */
-  const { user, signOut, profile } = useAuth();
+  /** Top navigation bar with branding and demo notice (auth disabled) */
+  const { user, profile } = useAuth(); // signOut disabled in demo
 
   return (
     <header className="sticky top-0 z-30 w-full border-b border-gray-200 bg-white/80 backdrop-blur">
@@ -22,19 +22,9 @@ export default function Navbar() {
           {profile?.role === 'admin' || profile?.role === 'trainer' ? (
             <Link to="/admin" className="text-sm text-gray-700 hover:text-blue-600">Admin</Link>
           ) : null}
-          {!user ? (
-            <>
-              <Link to="/login" className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700">Login</Link>
-              <Link to="/signup" className="rounded-md border border-blue-600 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-50">Sign up</Link>
-            </>
-          ) : (
-            <button
-              onClick={signOut}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              Sign out
-            </button>
-          )}
+          <span className="rounded-md border border-yellow-300 bg-yellow-50 px-3 py-1.5 text-xs text-yellow-800">
+            Backend features disabled
+          </span>
         </nav>
       </div>
     </header>

@@ -10,23 +10,6 @@ import App from './App.jsx';
  * Adds an ErrorBoundary and a minimal /__health route to avoid blank screen.
  */
 
-// Simple console diagnostics for env presence (no secrets)
-(function envDiagnostics() {
-  try {
-    const info = {
-      mode: (import.meta?.env?.MODE) || process.env.NODE_ENV,
-      hasViteSupabaseUrl: Boolean(import.meta?.env?.VITE_SUPABASE_URL),
-      hasViteSupabaseKey: Boolean(import.meta?.env?.VITE_SUPABASE_ANON_KEY),
-      hasCraSupabaseUrl: Boolean(process.env?.REACT_APP_SUPABASE_URL),
-      hasCraSupabaseKey: Boolean(process.env?.REACT_APP_SUPABASE_KEY || process.env?.REACT_APP_SUPABASE_ANON_KEY),
-    };
-    // eslint-disable-next-line no-console
-    console.info('[LMS] Env diagnostics (no secrets):', info);
-  } catch {
-    // ignore
-  }
-})();
-
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -50,7 +33,7 @@ class ErrorBoundary extends React.Component {
             {this.state.errorMessage}
           </div>
           <div style={{ marginTop: 8, fontSize: 12, color: '#6B7280' }}>
-            Check the browser console for details. Ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.
+            Check the browser console for details. Backend features are disabled until configured.
           </div>
         </div>
       );
@@ -73,7 +56,6 @@ function Health() {
 
 const rootEl = document.getElementById('root');
 if (!rootEl) {
-  // Never throw uncaught error that would blank the page; show inline fallback
   const fallback = document.createElement('div');
   fallback.style.padding = '16px';
   fallback.innerText = 'Root element #root not found in index.html';

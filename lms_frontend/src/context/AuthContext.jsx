@@ -1,16 +1,16 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import { getSupabaseClient } from '../supabase/client';
 
 // PUBLIC_INTERFACE
 export const AuthContext = createContext({
-  /** This context provides the authenticated user, roles, loading state, and auth methods. */
+  /** This context provides a disabled-auth state with no backend requirements. */
   user: null,
   profile: null,
   roles: [],
-  loading: true,
-  signIn: async () => {},
-  signUp: async () => {},
-  signOut: async () => {},
+  loading: false,
+  signIn: async () => ({ error: { message: 'Authentication disabled in demo mode' } }),
+  signUp: async () => ({ error: { message: 'Authentication disabled in demo mode' } }),
+  signOut: async () => ({ error: null }),
   refreshProfile: async () => {},
 });
 
@@ -23,126 +23,36 @@ export function useAuth() {
 // PUBLIC_INTERFACE
 export function AuthProvider({ children }) {
   /**
-   * Provides Auth context to the app using Supabase session and profile table.
+   * Provides a no-auth context. Supabase client is a no-op stub.
+   * All features depending on authentication are disabled.
    */
   const supabase = getSupabaseClient();
-  const [session, setSession] = useState(null);
+  const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [roles, setRoles] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchProfileAndRoles = async (userId) => {
-    if (!userId) {
-      setProfile(null);
-      setRoles([]);
-      return;
-    }
-    // Fetch profile from 'users' table and map roles
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, email, full_name, role')
-      .eq('id', userId)
-      .single();
-
-    if (!error && data) {
-      setProfile(data);
-      setRoles([data.role].filter(Boolean));
-    } else {
-      setProfile(null);
-      setRoles([]);
-    }
-  };
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
+    // Maintain API parity; ensure no network calls are made.
     (async () => {
-      const { data: { session: s } } = await supabase.auth.getSession();
-      if (!mounted) return;
-      setSession(s);
-      await fetchProfileAndRoles(s?.user?.id);
       setLoading(false);
+      setUser(null);
+      setProfile(null);
+      setRoles([]);
     })();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      setSession(newSession);
-      await fetchProfileAndRoles(newSession?.user?.id);
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    // subscribe/unsubscribe to maintain shape
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {});
+    return () => subscription.unsubscribe();
   }, [supabase]);
 
-  const signIn = async ({ email, password }) => {
-    if (!email || !password) {
-      return { error: { message: 'Email and password are required' } };
-    }
-    const result = await supabase.auth.signInWithPassword({ email, password });
-    if (!result.error) {
-      await fetchProfileAndRoles(result.data.user.id);
-    }
-    return result;
-  };
-
-  const signUp = async ({ email, password, fullName }) => {
-    if (!email || !password) {
-      return { error: { message: 'Email and password are required' } };
-    }
-
-    const redirectTo =
-      (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_FRONTEND_URL) ||
-      process.env.VITE_FRONTEND_URL ||
-      process.env.REACT_APP_FRONTEND_URL ||
-      window.location.origin;
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectTo,
-        data: { full_name: fullName || '' },
-      },
-    });
-
-    if (!error && data?.user) {
-      // Create profile row
-      await supabase.from('users').insert({
-        id: data.user.id,
-        email,
-        full_name: fullName || '',
-        role: 'student',
-      });
-      await fetchProfileAndRoles(data.user.id);
-    }
-    return { data, error };
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
-    setProfile(null);
-    setRoles([]);
-  };
-
-  const refreshProfile = async () => {
-    await fetchProfileAndRoles(session?.user?.id);
-  };
+  const signIn = async () => ({ error: { message: 'Authentication disabled in demo mode' } });
+  const signUp = async () => ({ error: { message: 'Authentication disabled in demo mode' } });
+  const signOut = async () => ({ error: null });
+  const refreshProfile = async () => {};
 
   const value = useMemo(
-    () => ({
-      user: session?.user || null,
-      profile,
-      roles,
-      loading,
-      signIn,
-      signUp,
-      signOut,
-      refreshProfile,
-    }),
-    [session, profile, roles, loading]
+    () => ({ user, profile, roles, loading, signIn, signUp, signOut, refreshProfile }),
+    [user, profile, roles, loading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

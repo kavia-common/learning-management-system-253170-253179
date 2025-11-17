@@ -4,18 +4,18 @@ import { getSupabaseClient } from '../supabase/client';
 
 // PUBLIC_INTERFACE
 export default function Courses() {
-  /** Lists available courses */
-  const supabase = getSupabaseClient();
+  /** Lists available courses (mocked in demo mode) */
+  getSupabaseClient(); // ensure stub init for consistency
   const [courses, setCourses] = useState([]);
 
   useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from('courses')
-        .select('id, title, description, level, content_count');
-      setCourses(data || []);
-    })();
-  }, [supabase]);
+    // Mocked dataset
+    const mock = [
+      { id: 'c1', title: 'Ocean LMS 101', description: 'A starter course to explore the LMS.', level: 'Beginner', content_count: 2 },
+      { id: 'c2', title: 'Advanced Topics', description: 'Dive deeper into LMS features.', level: 'Advanced', content_count: 0 },
+    ];
+    setCourses(mock);
+  }, []);
 
   return (
     <div>

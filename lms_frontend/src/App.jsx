@@ -33,8 +33,10 @@ export default function App() {
                   <div className="rounded-xl border border-gray-200 bg-white p-6">
                     <div className="text-xl font-semibold text-gray-900">Welcome to Ocean LMS</div>
                     <p className="mt-1 text-sm text-gray-600">
-                      Use the sidebar to navigate. If the app appears empty, visit{' '}
-                      <Link to="/__health" className="text-blue-700 underline">/__health</Link> for a quick check.
+                      Backend features are currently disabled. You can browse the UI and static pages.
+                    </p>
+                    <p className="mt-2 text-sm text-gray-600">
+                      Visit <Link to="/__health" className="text-blue-700 underline">/__health</Link> for a quick check.
                     </p>
                   </div>
                 }

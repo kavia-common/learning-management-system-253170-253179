@@ -32,6 +32,11 @@ export default function Sidebar() {
           </>
         )}
       </nav>
+      {!isAdminLike && (
+        <div className="mt-4 rounded-md border border-yellow-200 bg-yellow-50 p-2 text-xs text-yellow-800">
+          Admin features hidden. Auth is disabled in this demo.
+        </div>
+      )}
     </aside>
   );
 }

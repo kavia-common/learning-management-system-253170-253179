@@ -6,45 +6,40 @@ import { getSupabaseClient } from '../supabase/client';
 
 // PUBLIC_INTERFACE
 export default function CourseDetails() {
-  /** Displays course details and content list with playable/viewable media */
+  /** Displays course details and content list with playable/viewable media (mocked) */
   const { id } = useParams();
-  const supabase = getSupabaseClient();
+  getSupabaseClient(); // ensure stub init
   const [course, setCourse] = useState(null);
   const [contents, setContents] = useState([]);
   const [active, setActive] = useState(null);
   const [signedUrl, setSignedUrl] = useState('');
 
   useEffect(() => {
-    (async () => {
-      const { data: c } = await supabase.from('courses').select('*').eq('id', id).single();
-      setCourse(c || null);
-      const { data } = await supabase
-        .from('course_content')
-        .select('*')
-        .eq('course_id', id)
-        .order('position', { ascending: true });
-      setContents(data || []);
-      if (data?.length) setActive(data[0]);
-    })();
-  }, [id, supabase]);
+    // Mock course and content
+    const mockCourse = { id, title: 'Ocean LMS 101', description: 'A starter course to explore the LMS.' };
+    const mockContents = [
+      { id: 'ct1', course_id: id, title: 'Welcome Video', type: 'video' },
+      { id: 'ct2', course_id: id, title: 'Introduction PDF', type: 'pdf' },
+    ];
+    setCourse(mockCourse);
+    setContents(mockContents);
+    setActive(mockContents[0] || null);
+  }, [id]);
 
   useEffect(() => {
-    (async () => {
-      if (!active) {
-        setSignedUrl('');
-        return;
-      }
-      if (!active.storage_path) {
-        setSignedUrl('');
-        return;
-      }
-      // Get signed URL from storage bucket
-      const path = active.storage_path;
-      const bucket = active.bucket || 'course-media';
-      const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60);
-      setSignedUrl(error ? '' : data?.signedUrl || '');
-    })();
-  }, [active, supabase]);
+    // No storage; use empty strings or example public URLs if needed
+    if (!active) {
+      setSignedUrl('');
+      return;
+    }
+    if (active.type === 'video') {
+      setSignedUrl(''); // could place a public demo URL if available
+    } else if (active.type === 'pdf') {
+      setSignedUrl('');
+    } else {
+      setSignedUrl('');
+    }
+  }, [active]);
 
   return (
     <div className="grid gap-6 md:grid-cols-[1fr_320px]">
@@ -57,6 +52,9 @@ export default function CourseDetails() {
           {active?.type === 'video' ? <VideoPlayer url={signedUrl} /> : null}
           {active?.type === 'pdf' ? <PdfViewer url={signedUrl} /> : null}
           {!active && <div className="text-sm text-gray-600">No content available.</div>}
+          {(active?.type === 'video' || active?.type === 'pdf') && (
+            <div className="text-xs text-gray-500">Content preview disabled in demo mode.</div>
+          )}
         </div>
       </div>
       <div className="space-y-3">

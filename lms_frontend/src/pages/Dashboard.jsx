@@ -5,37 +5,23 @@ import { getSupabaseClient } from '../supabase/client';
 
 // PUBLIC_INTERFACE
 export default function Dashboard() {
-  /** Dashboard showing enrolled courses and progress */
+  /** Dashboard showing progress and enrollments (mocked) */
   const { user } = useAuth();
-  const supabase = getSupabaseClient();
+  getSupabaseClient(); // init stub
   const [courses, setCourses] = useState([]);
   const [progress, setProgress] = useState([]);
 
   useEffect(() => {
-    const load = async () => {
-      if (!user) return;
-      const { data: enrolls } = await supabase
-        .from('enrollments')
-        .select('course:course_id (id, title, description)')
-        .eq('user_id', user.id);
-
-      setCourses((enrolls || []).map((e) => e.course));
-
-      // Demo progress data; could be derived from quiz_submissions
-      const { data: submissions } = await supabase
-        .from('quiz_submissions')
-        .select('created_at, score_percent')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
-
-      const chart = (submissions || []).map((s, idx) => ({
-        label: `S${idx + 1}`,
-        percent: Math.round(s.score_percent || 0),
-      }));
-      setProgress(chart);
-    };
-    load();
-  }, [supabase, user]);
+    // Mock chart data regardless of auth state
+    const chart = [
+      { label: 'S1', percent: 40 },
+      { label: 'S2', percent: 55 },
+      { label: 'S3', percent: 72 },
+    ];
+    setProgress(chart);
+    // No enrollments in demo
+    setCourses([]);
+  }, [user]);
 
   return (
     <div className="space-y-6">
@@ -53,7 +39,7 @@ export default function Dashboard() {
               <div className="text-sm text-gray-600">{c.description}</div>
             </li>
           ))}
-          {courses?.length === 0 && <div className="text-sm text-gray-600">No enrollments yet.</div>}
+          {courses?.length === 0 && <div className="text-sm text-gray-600">No enrollments yet (demo mode).</div>}
         </ul>
       </div>
     </div>
