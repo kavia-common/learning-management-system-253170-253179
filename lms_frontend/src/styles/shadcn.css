@@ -1,0 +1,9 @@
+/* Placeholder for shadcn-like utility overrides if needed */
+:root {
+  --radius: 0.5rem;
+}
+.card {
+  border-radius: var(--radius);
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+}

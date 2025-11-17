@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('renders app container', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  // Basic smoke test for the welcome text we added on home route
+  const text = screen.getByText(/Ocean LMS/i);
+  expect(text).toBeInTheDocument();
 });

@@ -1,82 +1,116 @@
-# Lightweight React Template for KAVIA
+# Ocean LMS Frontend (React + Supabase)
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
+A modern Learning Management System frontend built with React (CRA), Tailwind CSS, and Supabase for authentication, database, and storage. Includes charts, media viewers, and admin tools.
 
 ## Features
 
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
+- Supabase authentication (email/password), profile, and role support (student/trainer/admin)
+- Course management, content upload (video/pdf to Supabase Storage), and viewing
+- Quizzes with submissions and progress visualization (Recharts)
+- Protected routes and role-based routes
+- Tailwind CSS styling with Ocean Professional theme
+- Edge Function stub for certificate generation
+- Schema and RLS SQL for Supabase
 
-## Getting Started
+## Prerequisites
 
-In the project directory, you can run:
+- Node.js 18+
+- Supabase account and project
+- supabase CLI (for deploying SQL and Edge Functions)
 
-### `npm start`
+## Setup
 
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+1) Install dependencies:
 
-### `npm test`
-
-Launches the test runner in interactive watch mode.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-## Customization
-
-### Colors
-
-The main brand colors are defined as CSS variables in `src/App.css`:
-
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
+```bash
+cd lms_frontend
+npm install
 ```
 
-### Components
+2) Configure environment variables:
 
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
+Copy `.env.example` to `.env` and set the values:
 
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
+```
+REACT_APP_SUPABASE_URL=your_supabase_url
+REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
+# Keep existing values if already used elsewhere:
+REACT_APP_API_BASE=
+REACT_APP_BACKEND_URL=
+REACT_APP_FRONTEND_URL=http://localhost:3000
+REACT_APP_WS_URL=
+```
 
-## Learn More
+3) Tailwind CSS (already configured):
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- `tailwind.config.js` and `postcss.config.js` included.
+- Global styles wired in `src/index.css`.
 
-### Code Splitting
+4) Start the app:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+npm start
+```
 
-### Analyzing the Bundle Size
+Open http://localhost:3000
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Supabase Setup
 
-### Making a Progressive Web App
+1) Initialize schema and RLS:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```bash
+# From lms_frontend folder (or repo root adjust paths)
+supabase db push --file docs/supabase/schema.sql
+supabase db push --file docs/supabase/rls.sql
+```
 
-### Advanced Configuration
+Alternatively, run in Studio SQL editor by copying contents of the files.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+2) Storage buckets:
 
-### Deployment
+Create two buckets (public or restricted per your needs):
+- `course-media` (for videos and PDFs)
+- `certificates` (for generated certificates)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+3) Edge Function deployment (stub):
 
-### `npm run build` fails to minify
+```bash
+# From lms_frontend/docs/supabase/edge
+supabase functions deploy certificates
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The function is a stub that validates input and returns a JSON placeholder.
+
+## Seeding Data (optional)
+
+In Supabase SQL editor, you can add minimal seed rows after creating a user:
+
+```sql
+-- Assume an auth user exists with UUID 'YOUR_USER_ID'
+insert into public.users (id, email, full_name, role)
+values ('YOUR_USER_ID', 'you@example.com', 'You', 'admin')
+on conflict (id) do nothing;
+
+insert into public.courses (title, description, level, created_by)
+values ('Intro to Ocean LMS', 'Getting started course', 'Beginner', 'YOUR_USER_ID');
+```
+
+## Security Notes
+
+- Do not commit real keys. Use environment variables.
+- Input validation is performed client-side for UX. Enforce access control via Supabase RLS.
+- Avoid logging sensitive data in the browser console.
+
+## Project Structure
+
+- `src/supabase/client.js` - Supabase initialization
+- `src/context/AuthContext.jsx` - Auth/session/roles
+- `src/routes/ProtectedRoute.jsx` - Auth guard
+- `src/routes/RoleRoute.jsx` - Role guard
+- Components: Navbar, Sidebar, CourseCard, VideoPlayer, PdfViewer, Quiz, ProgressChart
+- Pages: Login, Signup, Dashboard, Courses, CourseDetails, TakeQuiz, AdminPanel, CreateCourse, CreateQuiz, AssignCourses
+
+## Notes
+
+- This frontend assumes the provided schema and RLS policies are applied in your Supabase project.
+- Certificates Edge Function is a placeholder and should be extended to generate PDFs and write to `certificates` storage bucket.
