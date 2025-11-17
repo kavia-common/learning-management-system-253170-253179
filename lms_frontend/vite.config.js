@@ -11,39 +11,34 @@ import react from '@vitejs/plugin-react';
  */
 export default defineConfig(() => {
   // Prefer env-based allowed hosts. Accept comma-separated list from ALLOWED_HOSTS.
-  // If not provided, include the reported hostname required by the preview environment.
   const envAllowed =
     (process?.env?.ALLOWED_HOSTS || '')
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean);
 
-  // Always include the reported host so previews work out of the box.
+  // Include the preview host; fall back to permissive '*' to prevent blank preview due to host mismatch.
   const reportedHost = 'vscode-internal-19782-beta.beta01.cloud.kavia.ai';
 
-  // Merge and de-duplicate allowed hosts
-  const allowedHosts = Array.from(new Set([...(envAllowed || []), reportedHost]));
+  // Merge and de-duplicate allowed hosts and include wildcard as last resort.
+  const allowedHosts = Array.from(new Set([...(envAllowed || []), reportedHost, '*']));
 
   return {
     plugins: [react()],
     server: {
-      // host: true binds to 0.0.0.0 and allows external access
       host: true,
       port: 3000,
       strictPort: true,
       open: false,
-      // allow HMR from public endpoint
       hmr: {
         clientPort: 3000,
       },
-      // Ensure the remote hostname is permitted by the dev server
       allowedHosts,
     },
     preview: {
       host: true,
       port: 3000,
       strictPort: true,
-      // Ensure the remote hostname is permitted by the preview server as well
       allowedHosts,
     },
   };

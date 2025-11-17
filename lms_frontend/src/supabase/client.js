@@ -43,13 +43,31 @@ export function getSupabaseClient() {
     }
   }
 
-  supabaseInstance = createClient(url || '', anonKey || '', {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-    },
-  });
+  try {
+    supabaseInstance = createClient(url || '', anonKey || '', {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+      },
+    });
+  } catch (e) {
+    // Do not crash app; provide a minimal mock that throws on use with clear message
+    // eslint-disable-next-line no-console
+    console.error('[LMS] Failed to initialize Supabase client:', e?.message || e);
+    const err = new Error('Supabase client is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+    supabaseInstance = {
+      from() { throw err; },
+      auth: {
+        getSession: async () => ({ data: { session: null }, error: err }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+        signInWithPassword: async () => ({ data: null, error: err }),
+        signUp: async () => ({ data: null, error: err }),
+        signOut: async () => ({ error: null }),
+      },
+      storage: { from() { return { createSignedUrl: async () => ({ data: null, error: err }), upload: async () => ({ data: null, error: err }) }; } },
+    };
+  }
 
   return supabaseInstance;
 }
