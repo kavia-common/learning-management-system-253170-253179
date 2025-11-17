@@ -1,26 +1,23 @@
 {
   "name": "react-kavia",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-player": "^2.14.1",
     "react-pdf": "^7.7.1",
+    "react-player": "^2.14.1",
     "react-router-dom": "^6.26.2",
-    "recharts": "^2.12.7",
-    "react-scripts": "^5.0.1"
+    "recharts": "^2.12.7"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "postinstall": "node -e \"console.log('Ensure Tailwind is configured. If styles missing, run: npm i -D tailwindcss postcss autoprefixer && npx tailwindcss init -p')\""
-  },
-  "eslintConfig": {
-    "extends": "react-app"
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "postinstall": "node -e \"console.log('Using Vite. If styles missing, ensure Tailwind is installed and content globs include ./index.html and ./src/**/*.')\""
   },
   "browserslist": {
     "production": [
@@ -35,9 +32,11 @@
     ]
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.20",
     "cross-env": "^7.0.3",
     "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.14"
+    "tailwindcss": "^3.4.14",
+    "vite": "^5.4.21"
   }
 }

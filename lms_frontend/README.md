@@ -1,6 +1,6 @@
-# Ocean LMS Frontend (React + Supabase)
+# Ocean LMS Frontend (Vite + React + Supabase)
 
-A modern Learning Management System frontend built with React (CRA), Tailwind CSS, and Supabase for authentication, database, and storage. Includes charts, media viewers, and admin tools.
+A modern Learning Management System frontend built with React (Vite), Tailwind CSS, and Supabase for authentication, database, and storage. Includes charts, media viewers, and admin tools.
 
 ## Features
 
@@ -32,27 +32,43 @@ npm install
 Copy `.env.example` to `.env` and set the values:
 
 ```
-REACT_APP_SUPABASE_URL=your_supabase_url
-REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
-# Keep existing values if already used elsewhere:
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_FRONTEND_URL=http://localhost:3000
+
+# (Optional) Compatibility if other parts rely on CRA-style vars:
+REACT_APP_FRONTEND_URL=http://localhost:3000
+
+# Keep existing values if already used elsewhere in the container:
 REACT_APP_API_BASE=
 REACT_APP_BACKEND_URL=
-REACT_APP_FRONTEND_URL=http://localhost:3000
 REACT_APP_WS_URL=
+...
 ```
 
 3) Tailwind CSS (already configured):
 
 - `tailwind.config.js` and `postcss.config.js` included.
 - Global styles wired in `src/index.css`.
+- Content globs include `./index.html` and `./src/**/*.{js,jsx,ts,tsx}`.
 
-4) Start the app:
+4) Start the app (Vite):
 
 ```bash
+# dev server on port 3000
+npm run dev
+# or
 npm start
 ```
 
 Open http://localhost:3000
+
+Build and preview:
+
+```bash
+npm run build
+npm run preview
+```
 
 ## Supabase Setup
 
@@ -103,7 +119,9 @@ values ('Intro to Ocean LMS', 'Getting started course', 'Beginner', 'YOUR_USER_I
 
 ## Project Structure
 
-- `src/supabase/client.js` - Supabase initialization
+- `src/main.jsx` - Vite entrypoint (mounts BrowserRouter and App)
+- `index.html` - Root HTML (Vite)
+- `src/supabase/client.js` - Supabase initialization (uses VITE_ envs, falls back to CRA)
 - `src/context/AuthContext.jsx` - Auth/session/roles
 - `src/routes/ProtectedRoute.jsx` - Auth guard
 - `src/routes/RoleRoute.jsx` - Role guard

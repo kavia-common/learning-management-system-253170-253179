@@ -92,7 +92,12 @@ export function AuthProvider({ children }) {
       return { error: { message: 'Email and password are required' } };
     }
 
-    const redirectTo = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
+    const redirectTo =
+      (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_FRONTEND_URL) ||
+      process.env.VITE_FRONTEND_URL ||
+      process.env.REACT_APP_FRONTEND_URL ||
+      window.location.origin;
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,

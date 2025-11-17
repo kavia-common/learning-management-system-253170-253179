@@ -17,16 +17,19 @@ export function getSupabaseClient() {
   /** Returns a singleton Supabase client. */
   if (supabaseInstance) return supabaseInstance;
 
-  const url = process.env.REACT_APP_SUPABASE_URL;
-  const anonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_KEY; // backward compat with container_env list
+  // Prefer Vite-style env vars; fall back to CRA-style for backward compatibility
+  const url = import.meta?.env?.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
+  const anonKey =
+    import.meta?.env?.VITE_SUPABASE_ANON_KEY ||
+    process.env.VITE_SUPABASE_ANON_KEY ||
+    process.env.REACT_APP_SUPABASE_ANON_KEY ||
+    process.env.REACT_APP_SUPABASE_KEY;
 
   if (!url || !anonKey) {
-    // Non-fatal warning—allows app to render with limited functionality.
-    // Do not log secrets and avoid spamming prod logs.
-    if (process.env.NODE_ENV !== 'production') {
+    if (import.meta?.env?.MODE !== 'production' && process.env.NODE_ENV !== 'production') {
       // eslint-disable-next-line no-console
       console.warn(
-        'Supabase env vars missing. Set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY in your .env file.'
+        'Supabase env vars missing. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
       );
     }
   }
